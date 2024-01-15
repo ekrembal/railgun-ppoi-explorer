@@ -1,0 +1,107 @@
+import { Query, QueryTypeEnum } from '@screens/App';
+import React, { useState } from 'react';
+import { Dropdown } from './Dropdown';
+import { SearchButton } from './SearchButton';
+import { NetworkName } from '@railgun-community/shared-models';
+import { useNavigate } from 'react-router-dom';
+
+interface SearchBarProps {
+  initialNetwork: NetworkName | undefined;
+  initialQueryValue: string | undefined;
+  makeQuery: (query: Query) => void;
+}
+
+
+export const isAddress = (input: string): boolean => {
+  return /^0x[a-fA-F0-9]{40}$/.test(input);
+};
+
+export const isTx = (input: string): boolean => {
+  return /^0x[a-fA-F0-9]{64}$/.test(input);
+};
+
+export const formatInput = (input: string): string => {
+  const trimmedInput = input.trim();
+  return trimmedInput.startsWith('0x') ? trimmedInput : `0x${trimmedInput}`;
+};
+
+export const isNetworkCorrect = (network: string): boolean => {
+  return Object.values(NetworkName).includes(network as NetworkName);
+}
+
+export const SearchBar: React.FC<SearchBarProps> = ({
+  initialNetwork,
+  initialQueryValue,
+  makeQuery,
+}) => {
+  const [queryInput, setQueryInput] = useState<string>(
+    initialQueryValue !== undefined ? initialQueryValue : '',
+  );
+  const [currentNetwork, setCurrentNetwork] = useState<NetworkName>(
+    initialNetwork || NetworkName.EthereumGoerli,
+  );
+  const [isInputError, setIsInputError] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    setIsInputError(false);
+    if (isAddress(queryInput)) {
+      // makeQuery({
+      //   network: currentNetwork,
+      //   type: QueryTypeEnum.ADDRESS,
+      //   value: formatInput(queryInput),
+      // });
+      navigate(`/${currentNetwork}/address/${formatInput(queryInput)}`, {
+        replace: true,
+      });
+    } else if (isTx(queryInput)) {
+      // makeQuery({
+      //   network: currentNetwork,
+      //   type: QueryTypeEnum.TX,
+      //   value: formatInput(queryInput),
+      // });
+      navigate(`/${currentNetwork}/tx/${formatInput(queryInput)}`, {
+        replace: true,
+      });
+    } else {
+      setIsInputError(true);
+    }
+  };
+
+  return (
+    <div>
+      <div className="relative">
+        <div className="absolute inset-y-0 start-0 flex items-center p-2.5">
+          <Dropdown
+            initialNetwork={initialNetwork}
+            onNetworkChange={(network: NetworkName) =>
+              setCurrentNetwork(network)
+            }
+          />
+        </div>
+        <input
+          value={queryInput}
+          onChange={e => setQueryInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              handleSearch();
+            }
+          }}
+          type="search"
+          id="default-search"
+          className="block w-full p-4 ps-[146px] text-sm bg-white rounded-lg focus:outline-none focus:border-emerald-400"
+          placeholder="Search by address or transaction hash"
+          required
+        />
+        <SearchButton onClick={handleSearch} />
+      </div>
+      {isInputError && (
+        <div className="m-4">
+          <p className="text-red-500 text-base font-medium">
+            You’ve entered a wrong address or transaction hash.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.your-class {
+    background-image: url('./background.png');
+    background-repeat: no-repeat; /* Prevents the background image from repeating */
+    background-size: 100% auto;
+}
