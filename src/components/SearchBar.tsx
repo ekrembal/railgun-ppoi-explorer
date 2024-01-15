@@ -38,7 +38,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     initialQueryValue !== undefined ? initialQueryValue : '',
   );
   const [currentNetwork, setCurrentNetwork] = useState<NetworkName>(
-    initialNetwork || NetworkName.EthereumGoerli,
+    initialNetwork || NetworkName.Ethereum,
   );
   const [isInputError, setIsInputError] = useState<boolean>(false);
   const navigate = useNavigate();

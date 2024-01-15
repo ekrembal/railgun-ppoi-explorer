@@ -33,7 +33,7 @@ export const ProofCounter: React.FC<ProofCounterProps> = ({ totalProofs }) => {
           TOTAL PROOFS GENERATED
         </div>
         <div className="text-black text-base font-normal">
-          {formattedProofs} M
+          {formattedProofs}
         </div>
       </div>
     </div>
