@@ -1,8 +1,8 @@
-import { NetworkName, isDefined } from '@railgun-community/shared-models';
+import { isDefined,NetworkName } from '@railgun-community/shared-models';
 import { useParams } from 'react-router-dom';
 import { App, QueryTypeEnum } from '../screens/App';
-import { isAddress, isNetworkCorrect, isTx } from './SearchBar';
 import { ErrorComponent } from './Error';
+import { isAddress, isNetworkCorrect, isTx } from './SearchBar';
 
 const ErrorRoute = () => {
   return (

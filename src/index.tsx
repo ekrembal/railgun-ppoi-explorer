@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ErrorComponent } from '@components/Error';
 import { Layout } from './components/Layout';
 import { AddressRouteHandler, TxRouteHandler } from './components/RouteHandler';
 import { App } from './screens/App';
-// import { ExplorerProvider } from './services/explorer';
 
+// import { ExplorerProvider } from './services/explorer';
 import './index.css';
-import { ErrorComponent } from '@components/Error';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,

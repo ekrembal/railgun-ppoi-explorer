@@ -1,6 +1,6 @@
 import { POIStatus } from '@railgun-community/shared-models';
-import { POIResult } from '@screens/App';
 import React from 'react';
+import { POIResult } from '@screens/App';
 
 interface ResultListProps {
   results: POIResult[];

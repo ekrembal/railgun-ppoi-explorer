@@ -1,9 +1,9 @@
-import { Query, QueryTypeEnum } from '@screens/App';
+import { NetworkName } from '@railgun-community/shared-models';
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Query, QueryTypeEnum } from '@screens/App';
 import { Dropdown } from './Dropdown';
 import { SearchButton } from './SearchButton';
-import { NetworkName } from '@railgun-community/shared-models';
-import { useNavigate } from 'react-router-dom';
 
 interface SearchBarProps {
   initialNetwork: NetworkName | undefined;

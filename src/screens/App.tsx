@@ -1,7 +1,4 @@
 // components/App.tsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ResultList } from '../components/ResultList';
 // import { useExplorer } from '../services/explorer';
 import {
   BlindedCommitmentType,
@@ -14,14 +11,17 @@ import {
   getRailgunTransactionDataForUnshieldToAddress,
   getRailgunTxidsForUnshields,
 } from '@railgun-community/wallet';
-import { POINodeRequest } from '@services/poi-node-request';
-import { AvailableNodes } from '@constants/nodes';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dropdown } from '@components/Dropdown';
-import { SearchButton } from '@components/SearchButton';
-import { LoadingSpinner } from '@components/LoadingSpinner';
-import { SearchBar } from '@components/SearchBar';
-import { ProofCounter } from '@components/ProofCounter';
 import { ErrorComponent } from '@components/Error';
+import { LoadingSpinner } from '@components/LoadingSpinner';
+import { ProofCounter } from '@components/ProofCounter';
+import { SearchBar } from '@components/SearchBar';
+import { SearchButton } from '@components/SearchButton';
+import { AvailableNodes } from '@constants/nodes';
+import { POINodeRequest } from '@services/poi-node-request';
+import { ResultList } from '../components/ResultList';
 export enum QueryTypeEnum {
   ADDRESS = 'address',
   TX = 'tx',
