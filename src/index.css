@@ -7,3 +7,30 @@
     background-repeat: no-repeat; /* Prevents the background image from repeating */
     background-size: 100% auto;
 }
+
+
+  /* Add this to your global styles.css or a similar file */
+.tooltip .tooltiptext {
+    /* Other styles for your tooltip */
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    border: solid transparent;
+    height: 0;
+    width: 0;
+    pointer-events: none;
+    border-color: rgba(136, 183, 213, 0);
+    border-top-color: #45CCA6;
+    border-width: 8px;
+    margin-left: -8px;
+  }
+  

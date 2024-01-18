@@ -39,9 +39,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkName>(
-    initialNetwork || NetworkName.EthereumGoerli,
+    initialNetwork || NetworkName.Ethereum,
   );
-  const networks = [NetworkName.EthereumGoerli, NetworkName.Ethereum];
+  const networks = [NetworkName.Ethereum, NetworkName.EthereumGoerli];
   const dropdownRef = useRef<HTMLDivElement>(null); // Create a ref for the dropdown
 
   useEffect(() => {

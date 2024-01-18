@@ -143,6 +143,7 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
           // setNodeStatusForAllNetworks(result);
           makeQuery(initialQuery, result)
             .then(result => {
+              result?.reverse();
               setResult(result);
               setIsLoading(false);
             })
@@ -171,6 +172,7 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
     setIsLoading(true);
     makeQuery(query, nodeStatusForAllNetworks)
       .then(result => {
+        result?.reverse();
         setResult(result);
         setIsLoading(false);
       })
