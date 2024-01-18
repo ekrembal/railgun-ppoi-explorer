@@ -11,7 +11,6 @@
 
   /* Add this to your global styles.css or a similar file */
 .tooltip .tooltiptext {
-    width: 320px;
     /* Other styles for your tooltip */
     position: absolute;
     bottom: 100%;
