@@ -43,16 +43,30 @@ export type POIsPerList = {
 export type POIsPerListMap = {
   [blindedCommitment: string]: POIsPerList;
 };
+
+export type NewPOIsPerBlindedCommitment = {
+  [blindedCommitment: string]: POIStatus;
+};
+
+export type NewPOIsPerList = {
+  [listKey: string]: NewPOIsPerBlindedCommitment;
+};
+
 export type POIResult = {
   txid: string;
   poisPerList: POIsPerListMap;
+};
+
+export type NewPOIResult = {
+  txid: string;
+  poisPerList: NewPOIsPerList;
 };
 const aggregatorNode = AvailableNodes[0];
 
 export const App: React.FC<{ initialQuery: Query | undefined }> = ({
   initialQuery,
 }) => {
-  const [result, setResult] = useState<POIResult[] | undefined>(undefined);
+  const [result, setResult] = useState<NewPOIResult[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [isInternalError, setIsInternalError] = useState<boolean>(false);
@@ -75,7 +89,7 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
   const makeQuery = async (
     query: Query,
     nodeStatus: NodeStatusAllNetworks,
-  ): Promise<POIResult[] | undefined> => {
+  ): Promise<NewPOIResult[] | undefined> => {
     console.log('make query called');
     try {
       let queryData: { txid: string; railgunTxids: string[] }[];
@@ -122,7 +136,21 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
               type: BlindedCommitmentType.Unshield,
             })),
           );
-          return { txid: queryTx.txid, poisPerList };
+          // Transforming to NewPOIsPerList structure
+          const newPoisPerList: NewPOIsPerList = {};
+          for (const [blindedCommitment, curPoisPerList] of Object.entries(
+            poisPerList,
+          )) {
+            for (const [listKey, poiStatus] of Object.entries(curPoisPerList)) {
+              if (newPoisPerList[listKey] == undefined) {
+                newPoisPerList[listKey] = {};
+              }
+              newPoisPerList[listKey][blindedCommitment] = poiStatus;
+            }
+          }
+
+          return { txid: queryTx.txid, poisPerList:newPoisPerList };
+          // return { txid: queryTx.txid, poisPerList };
         }),
       );
       return data;
