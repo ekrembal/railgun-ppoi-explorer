@@ -8,7 +8,8 @@ import { SearchButton } from './SearchButton';
 interface SearchBarProps {
   initialNetwork: NetworkName | undefined;
   initialQueryValue: string | undefined;
-  makeQuery: (query: Query) => void;
+  setCurrentNetwork: (network: NetworkName) => void;
+  currentNetwork: NetworkName;
 }
 
 
@@ -32,14 +33,13 @@ export const isNetworkCorrect = (network: string): boolean => {
 export const SearchBar: React.FC<SearchBarProps> = ({
   initialNetwork,
   initialQueryValue,
-  makeQuery,
+  currentNetwork,
+  setCurrentNetwork,
 }) => {
   const [queryInput, setQueryInput] = useState<string>(
     initialQueryValue !== undefined ? initialQueryValue : '',
   );
-  const [currentNetwork, setCurrentNetwork] = useState<NetworkName>(
-    initialNetwork || NetworkName.Ethereum,
-  );
+
   const [isInputError, setIsInputError] = useState<boolean>(false);
   const navigate = useNavigate();
 
