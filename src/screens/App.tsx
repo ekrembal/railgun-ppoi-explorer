@@ -5,11 +5,12 @@ import {
   NETWORK_CONFIG,
   NetworkName,
   NodeStatusAllNetworks,
+  POIListStatus,
   TXIDVersion,
 } from '@railgun-community/shared-models';
 import {
   getRailgunTransactionDataForUnshieldToAddress,
-  getRailgunTxidsForUnshields,
+  getRailgunTxDataForUnshields,
 } from '@railgun-community/wallet';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -45,11 +46,12 @@ export type POIsPerListMap = {
 };
 
 export type NewPOIsPerBlindedCommitment = {
-  [blindedCommitment: string]: POIStatus;
+  blindedCommitment: string;
+  poiStatus: POIStatus;
 };
 
 export type NewPOIsPerList = {
-  [listKey: string]: NewPOIsPerBlindedCommitment;
+  [listKey: string]: NewPOIsPerBlindedCommitment[];
 };
 
 export type POIResult = {
@@ -61,12 +63,57 @@ export type NewPOIResult = {
   txid: string;
   poisPerList: NewPOIsPerList;
 };
+
+export type AllResults = {
+  txData: { railgunTransaction: RailgunTransactionV2; railgunTxid: string }[];
+  poiData: NewPOIResult[];
+};
+
+export declare enum TokenType {
+  ERC20 = 0,
+  ERC721 = 1,
+  ERC1155 = 2,
+}
+export type TransactionReceiptLog = {
+  topics: string[];
+  data: string;
+};
+export type TokenData = {
+  tokenType: TokenType;
+  tokenAddress: string;
+  tokenSubID: string;
+};
+export type UnshieldRailgunTransactionData = {
+  tokenData: TokenData;
+  toAddress: string;
+  value: string;
+};
+export declare enum RailgunTransactionVersion {
+  V2 = 'V2',
+  V3 = 'V3',
+}
+export type RailgunTransactionV2 = {
+  version: RailgunTransactionVersion.V2;
+  graphID: string;
+  commitments: string[];
+  nullifiers: string[];
+  boundParamsHash: string;
+  blockNumber: number;
+  txid: string;
+  unshield?: UnshieldRailgunTransactionData;
+  utxoTreeIn: number;
+  utxoTreeOut: number;
+  utxoBatchStartPositionOut: number;
+  timestamp: number;
+  verificationHash: string;
+};
+
 const aggregatorNode = AvailableNodes[0];
 
 export const App: React.FC<{ initialQuery: Query | undefined }> = ({
   initialQuery,
 }) => {
-  const [result, setResult] = useState<NewPOIResult[] | undefined>(undefined);
+  const [result, setResult] = useState<AllResults | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [isInternalError, setIsInternalError] = useState<boolean>(false);
@@ -89,33 +136,42 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
   const makeQuery = async (
     query: Query,
     nodeStatus: NodeStatusAllNetworks,
-  ): Promise<NewPOIResult[] | undefined> => {
+  ): Promise<AllResults | undefined> => {
     console.log('make query called');
+
     try {
-      let queryData: { txid: string; railgunTxids: string[] }[];
+      let queryData: {
+        txid: string;
+        transactionDatas: {
+          railgunTransaction: RailgunTransactionV2;
+          railgunTxid: string;
+        }[];
+      }[];
       if (query.type === QueryTypeEnum.ADDRESS) {
         queryData = await getRailgunTransactionDataForUnshieldToAddress(
           NETWORK_CONFIG[query.network].chain,
           query.value,
         );
-      } else if (query.type === QueryTypeEnum.TX) {
-        let railgunTxids = await getRailgunTxidsForUnshields(
+      }
+      else if (query.type === QueryTypeEnum.TX) {
+        let railgunTxids = await getRailgunTxDataForUnshields(
           NETWORK_CONFIG[query.network].chain,
           query.value,
         );
         queryData = [
           {
             txid: query.value,
-            railgunTxids,
+            transactionDatas: railgunTxids
           },
         ];
-      } else {
+      }
+      else {
         queryData = [];
       }
 
       if (
         queryData.length == 0 ||
-        (queryData.length == 1 && queryData[0].railgunTxids.length == 0)
+        (queryData.length == 1 && queryData[0].transactionDatas.length == 0)
       ) {
         console.error('Query is empty');
         setIsNotFound(true);
@@ -124,6 +180,12 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
 
       console.log(queryData);
 
+      const railgunTxidToTransactionMap = new Map<string, RailgunTransactionV2>(
+        queryData
+          .flatMap(queryTx => queryTx.transactionDatas)
+          .map(txData => [txData.railgunTxid, txData.railgunTransaction]),
+      );
+
       const data = await Promise.all(
         queryData.map(async queryTx => {
           const poisPerList = await POINodeRequest.getPOIsPerList(
@@ -131,8 +193,8 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
             query.network,
             TXIDVersion.V2_PoseidonMerkle,
             nodeStatus?.listKeys ?? [],
-            queryTx.railgunTxids.map(blindedCommitment => ({
-              blindedCommitment: '0x' + blindedCommitment,
+            queryTx.transactionDatas.map(txData => ({
+              blindedCommitment: '0x' + txData.railgunTxid,
               type: BlindedCommitmentType.Unshield,
             })),
           );
@@ -143,17 +205,56 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
           )) {
             for (const [listKey, poiStatus] of Object.entries(curPoisPerList)) {
               if (newPoisPerList[listKey] == undefined) {
-                newPoisPerList[listKey] = {};
+                newPoisPerList[listKey] = [];
               }
-              newPoisPerList[listKey][blindedCommitment] = poiStatus;
+              newPoisPerList[listKey].push({
+                blindedCommitment,
+                poiStatus,
+              });
             }
           }
+          // now sort the newPoisPerList for each listKey
+          for (const [listKey, poisPerBlindedCommitment] of Object.entries(
+            newPoisPerList,
+          )) {
+            poisPerBlindedCommitment.sort((a, b) => {
+              const transactionA = railgunTxidToTransactionMap.get(a.blindedCommitment.slice(2));
+              const transactionB = railgunTxidToTransactionMap.get(b.blindedCommitment.slice(2));
+          
+              if (!transactionA || !transactionB) {
+                // Handle the case where one or both transactions are not found.
+                // You might want to sort these cases differently or throw an error.
+                return 0; // This example does nothing and keeps the original order.
+              }
 
-          return { txid: queryTx.txid, poisPerList:newPoisPerList };
+              // get the last 10 digits of the graphID
+              const timestampA = Number(transactionA.graphID.slice(-10));
+              const timestampB = Number(transactionB.graphID.slice(-10));
+
+              return timestampA - timestampB;
+            });
+          }
+
+          return { txid: queryTx.txid, poisPerList: newPoisPerList };
           // return { txid: queryTx.txid, poisPerList };
         }),
       );
-      return data;
+      console.log(
+        'Found railgunTxidToTransactionMap',
+        railgunTxidToTransactionMap,
+      );
+      return {
+        txData: queryData.reduce(
+          (accumulator, currentValue) => {
+            return accumulator.concat(currentValue.transactionDatas);
+          },
+          [] as {
+            railgunTransaction: RailgunTransactionV2;
+            railgunTxid: string;
+          }[],
+        ),
+        poiData: data,
+      };
     } catch (e) {
       console.error(e);
       return undefined;
@@ -171,7 +272,6 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
           // setNodeStatusForAllNetworks(result);
           makeQuery(initialQuery, result)
             .then(result => {
-              result?.reverse();
               setResult(result);
               setIsLoading(false);
             })
@@ -200,7 +300,6 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
     setIsLoading(true);
     makeQuery(query, nodeStatusForAllNetworks)
       .then(result => {
-        result?.reverse();
         setResult(result);
         setIsLoading(false);
       })
@@ -216,10 +315,18 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
     // Check if nodeStatus is defined and has the forNetwork property
     if (nodeStatus != undefined) {
       // Reduce all networks to sum their legacyTransactProofs
-      return Object.values(nodeStatus.forNetwork).reduce((total, status) => {
-        // Add the legacyTransactProofs if it exists, otherwise add 0
-        return total + (status?.legacyTransactProofs ?? 0);
-      }, 0);
+      return nodeStatus.forNetwork.Ethereum?.listStatuses 
+      ? Object.entries(nodeStatus.forNetwork.Ethereum.listStatuses).reduce(
+          (accumulator: number, [key, currentValue]: [string, POIListStatus]) => {
+            console.log(`Key: ${key}, Value:`, JSON.stringify(currentValue));
+            return accumulator + currentValue.poiEventLengths.Unshield;
+          },
+          0,
+        )
+      : 0;
+    
+
+          
     }
 
     // Return 0 if nodeStatus is not defined or doesn't have the forNetwork property

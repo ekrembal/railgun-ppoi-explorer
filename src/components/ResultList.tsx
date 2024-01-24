@@ -1,13 +1,15 @@
 import { POIStatus } from '@railgun-community/shared-models';
 import React from 'react';
 import {
+  AllResults,
   NewPOIResult,
   NewPOIsPerBlindedCommitment,
   NewPOIsPerList,
+  RailgunTransactionV2,
 } from '@screens/App';
 
 interface ResultListProps {
-  results: NewPOIResult[];
+  results: AllResults;
 }
 
 const LIST_NAME_MAPPING: { [key: string]: string } = {
@@ -57,26 +59,104 @@ export const MissingSVG = () => (
   </svg>
 );
 
+export const DetailsBlock: React.FC<{
+  blindedCommitment: string;
+  status: POIStatus;
+  txData: RailgunTransactionV2;
+  isLast: boolean;
+  index: number
+}> = ({ blindedCommitment, status, txData, isLast, index }) => {
+  return (
+    <div
+    key={blindedCommitment}
+    className={`pb-[16px] ${
+      isLast ? '' : 'border-b border-zinc-400 border-opacity-50'
+    }`}
+  >
+    <div className="flex flex-col">
+      <div className="flex flex-row">
+        <div className="text-base font-normal text-zinc-400 w-[180px]">
+          Unshield Index:
+        </div>
+        <div
+          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
+        >
+          <div>{index + 1}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-row">
+        <div className="text-base font-normal text-zinc-400 w-[180px]">
+          Token Address:
+        </div>
+        <div
+          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
+        >
+          <div>{txData.unshield?.tokenData.tokenAddress}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-row">
+        <div className="text-base font-normal text-zinc-400 w-[180px]">
+          Amount:
+        </div>
+        <div
+          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
+        >
+          <div>{txData.unshield?.value}</div>
+        </div>
+      </div>
+
+
+      <div className="flex flex-row">
+        <div className="text-base font-normal text-zinc-400 w-[180px]">
+          Status:
+        </div>
+        <div
+          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
+        >
+          <div>{status}</div>
+          <div>
+            {status === POIStatus.Valid ? (
+              <ValidSVG />
+            ) : (
+              <MissingSVG />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  );
+};
+
+
 export const ListBlock: React.FC<{
   listKey: string;
-  poisPerBlindedCommitment: NewPOIsPerBlindedCommitment;
+  poisPerBlindedCommitment: NewPOIsPerBlindedCommitment[];
   isLast: boolean;
-}> = ({ listKey, poisPerBlindedCommitment, isLast }) => {
+  txDataMapping: { railgunTransaction: RailgunTransactionV2; railgunTxid: string; }[];
+}> = ({ listKey, poisPerBlindedCommitment, isLast, txDataMapping }) => {
   let [isExpanded, setIsExpanded] = React.useState(false);
   let overallStatus = // if there is any missing POI, the overall status is missing
     Object.values(poisPerBlindedCommitment).filter(
-      status => status === POIStatus.Valid,
+      status => status.poiStatus === POIStatus.Missing,
     ).length > 0
-      ? POIStatus.Valid
-      : POIStatus.Missing;
+      ? POIStatus.Missing
+      : POIStatus.Valid;
 
+  console.log(JSON.stringify(txDataMapping));
+  const newTxDataMapping = new Map<string, RailgunTransactionV2>(
+    txDataMapping.map(txData => [txData.railgunTxid, txData.railgunTransaction])
+  );
   return (
     <div
       key={listKey}
       className={`pb-[16px] ${
-        isLast ? '' : 'border-b border-zinc-400 border-opacity-50'
+        (isLast && !isExpanded ) ? '' : 'border-b border-zinc-400 border-opacity-50'
       }`}
     >
+      
       <div className="flex flex-row">
         <div className="text-base font-normal text-zinc-400 w-[180px]">
           List Name:
@@ -144,59 +224,13 @@ export const ListBlock: React.FC<{
           </div>
         </div>
       </div>
+      {isExpanded && <div className="flex flex-row border-b border-zinc-400 border-opacity-50 mx-[200px] mt-[15px]"></div>}
 
       {isExpanded && (
-        <div className="flex flex-col space-y-[16px] mx-[50px] pt-[40px]">
-          {Object.entries(poisPerBlindedCommitment).map(
-            ([blindedCommitment, status], index, filteredList) => (
-              <div
-                key={blindedCommitment}
-                className={`pb-[16px] ${
-                  index == filteredList.length - 1 ? '' : 'border-b border-zinc-400 border-opacity-50'
-                }`}
-              >
-                <div className="flex flex-col">
-                  <div className="flex flex-row">
-                    <div className="text-base font-normal text-zinc-400 w-[180px]">
-                      Unshield Index:
-                    </div>
-                    <div
-                      className={`flex flex-row space-x-1.5 items-center text-base font-normal text-zinc-400`}
-                    >
-                      <div>{index + 1}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-row">
-                    <div className="text-base font-normal text-zinc-400 w-[180px]">
-                      Commitment:
-                    </div>
-                    <div
-                      className={`flex flex-row space-x-1.5 items-center text-base font-normal text-zinc-400`}
-                    >
-                      <div>{blindedCommitment}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-row">
-                    <div className="text-base font-normal text-zinc-400 w-[180px]">
-                      Status:
-                    </div>
-                    <div
-                      className={`flex flex-row space-x-1.5 items-center text-base font-normal text-zinc-400`}
-                    >
-                      <div>{status}</div>
-                      <div>
-                        {status === POIStatus.Valid ? (
-                          <ValidSVG />
-                        ) : (
-                          <MissingSVG />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div className="flex flex-col space-y-[16px] pt-[20px]">
+          {poisPerBlindedCommitment.map(
+            (item, index) => (
+              <DetailsBlock blindedCommitment={item.blindedCommitment} status={item.poiStatus} txData={newTxDataMapping.get(item.blindedCommitment.slice(2)) ?? {} as RailgunTransactionV2} isLast={index === poisPerBlindedCommitment.length - 1} index={index} />
             ),
           )}
         </div>
@@ -257,7 +291,9 @@ export const ListBlock: React.FC<{
 export const TxBlock: React.FC<{
   txid: string;
   poisPerList: NewPOIsPerList;
-}> = ({ txid, poisPerList }) => {
+  txDataMapping: { railgunTransaction: RailgunTransactionV2; railgunTxid: string; }[];
+}> = ({ txid, poisPerList, txDataMapping }) => {
+  console.log(JSON.stringify(txDataMapping));
   return (
     <div className="text-clip w-full h-auto mb-4 bg-white rounded-lg shadow">
       <div className="text-clip flex flex-row p-4 border-b border-zinc-400 border-opacity-50 px-[50px] py-[25px]">
@@ -274,6 +310,7 @@ export const TxBlock: React.FC<{
               listKey={listKey}
               poisPerBlindedCommitment={status}
               isLast={index === filteredList.length - 1}
+              txDataMapping={txDataMapping}
             />
           ))}
       </div>
@@ -282,13 +319,15 @@ export const TxBlock: React.FC<{
 };
 
 export const ResultList: React.FC<ResultListProps> = ({ results }) => {
+  console.log(JSON.stringify(results));
   return (
     <div className="w-full flex flex-col items-center space-y-[50px] pt-[50px]">
-      {results.map(result => (
+      {results.poiData.map(result => (
         <TxBlock
           key={result.txid}
           txid={result.txid}
           poisPerList={result.poisPerList}
+          txDataMapping={results.txData}
         />
       ))}
     </div>
