@@ -3,10 +3,12 @@
 @tailwind utilities;
 
 .your-class {
-    background-image: url('./background.png');
-    background-repeat: no-repeat; /* Prevents the background image from repeating */
-    background-size: 100% auto;
+  background-image: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)), url('./background.png');
+  background-repeat: no-repeat; /* Prevents the background image from repeating */
+  background-size: 100% auto;
+  background-position: top;
 }
+
 
 
   /* Add this to your global styles.css or a similar file */
