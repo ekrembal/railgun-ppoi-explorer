@@ -22,7 +22,7 @@ import { SearchBar } from '@components/SearchBar';
 import { SearchButton } from '@components/SearchButton';
 import { AvailableNodes } from '@constants/nodes';
 import { POINodeRequest } from '@services/poi-node-request';
-import { ResultList } from '../components/ResultList';
+import { IGNORED_LISTS, ResultList } from '../components/ResultList';
 export enum QueryTypeEnum {
   ADDRESS = 'address',
   TX = 'tx',
@@ -117,6 +117,9 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [isInternalError, setIsInternalError] = useState<boolean>(false);
+  const [currentNetwork, setCurrentNetwork] = useState<NetworkName>(
+    initialQuery?.network || NetworkName.Ethereum,
+  );
 
   // const [aggregatorNode, setAggregatorNode] = useState<string>(
   //   AvailableNodes[0],
@@ -152,8 +155,7 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
           NETWORK_CONFIG[query.network].chain,
           query.value,
         );
-      }
-      else if (query.type === QueryTypeEnum.TX) {
+      } else if (query.type === QueryTypeEnum.TX) {
         let railgunTxids = await getRailgunTxDataForUnshields(
           NETWORK_CONFIG[query.network].chain,
           query.value,
@@ -161,11 +163,10 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
         queryData = [
           {
             txid: query.value,
-            transactionDatas: railgunTxids
+            transactionDatas: railgunTxids,
           },
         ];
-      }
-      else {
+      } else {
         queryData = [];
       }
 
@@ -218,9 +219,13 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
             newPoisPerList,
           )) {
             poisPerBlindedCommitment.sort((a, b) => {
-              const transactionA = railgunTxidToTransactionMap.get(a.blindedCommitment.slice(2));
-              const transactionB = railgunTxidToTransactionMap.get(b.blindedCommitment.slice(2));
-          
+              const transactionA = railgunTxidToTransactionMap.get(
+                a.blindedCommitment.slice(2),
+              );
+              const transactionB = railgunTxidToTransactionMap.get(
+                b.blindedCommitment.slice(2),
+              );
+
               if (!transactionA || !transactionB) {
                 // Handle the case where one or both transactions are not found.
                 // You might want to sort these cases differently or throw an error.
@@ -308,25 +313,32 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
         setIsLoading(false);
       });
   };
-
   const getTotalLegacyProofs = (
     nodeStatus: NodeStatusAllNetworks | undefined,
   ) => {
     // Check if nodeStatus is defined and has the forNetwork property
-    if (nodeStatus != undefined) {
-      // Reduce all networks to sum their legacyTransactProofs
-      return nodeStatus.forNetwork.Ethereum?.listStatuses 
-      ? Object.entries(nodeStatus.forNetwork.Ethereum.listStatuses).reduce(
-          (accumulator: number, [key, currentValue]: [string, POIListStatus]) => {
+    if (nodeStatus != undefined && nodeStatus.forNetwork != undefined) {
+      // Check if the current network is defined in forNetwork
+      const networkStatus = nodeStatus.forNetwork[currentNetwork];
+      if (networkStatus) {
+        // Reduce all networks to sum their legacyTransactProofs
+        return Object.entries(networkStatus.listStatuses).reduce(
+          (
+            accumulator: number,
+            [key, currentValue]: [string, POIListStatus],
+          ) => {
             console.log(`Key: ${key}, Value:`, JSON.stringify(currentValue));
-            return accumulator + currentValue.poiEventLengths.Unshield;
+
+            return (
+              accumulator +
+              (IGNORED_LISTS.includes(key)
+                ? 0
+                : currentValue.poiEventLengths.Unshield)
+            );
           },
           0,
-        )
-      : 0;
-    
-
-          
+        );
+      }
     }
 
     // Return 0 if nodeStatus is not defined or doesn't have the forNetwork property
@@ -347,7 +359,8 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
       <SearchBar
         initialNetwork={initialQuery ? initialQuery.network : undefined}
         initialQueryValue={initialQuery ? initialQuery.value : undefined}
-        makeQuery={queryHandler}
+        currentNetwork={currentNetwork}
+        setCurrentNetwork={setCurrentNetwork}
       />
       {!isLoading && isNotFound && (
         <ErrorComponent

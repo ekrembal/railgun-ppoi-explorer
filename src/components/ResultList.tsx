@@ -22,7 +22,7 @@ const LIST_TOOLTIP_TEXT: { [key: string]: string } = {
     'The Specially Designated Nationals list maintained by US Department of Treasury – Office of Foreign Assets Control. This list is only input data and does not give data providers any insight into RAILGUN transactions.',
 };
 
-const IGNORED_LISTS = [
+export const IGNORED_LISTS = [
   '55049dc47b4435bca4a8f8ac27b1858e409f9f72b317fde4a442095cfc454893',
 ];
 
