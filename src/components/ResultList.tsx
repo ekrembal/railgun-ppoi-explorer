@@ -238,7 +238,7 @@ export const ListBlock: React.FC<{
 
       <div className="flex flex-row">
         <button
-          className="text-emerald-400 text-base font-normal underline m-auto"
+          className="text-emerald-400 text-base font-normal underline m-auto pt-3.5"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? (
@@ -319,10 +319,9 @@ export const TxBlock: React.FC<{
 };
 
 export const ResultList: React.FC<ResultListProps> = ({ results }) => {
-  console.log(JSON.stringify(results));
   return (
     <div className="w-full flex flex-col items-center space-y-[50px] pt-[50px]">
-      {results.poiData.map(result => (
+      {[...results.poiData].reverse().map(result => (
         <TxBlock
           key={result.txid}
           txid={result.txid}

@@ -333,7 +333,10 @@ export const App: React.FC<{ initialQuery: Query | undefined }> = ({
               accumulator +
               (IGNORED_LISTS.includes(key)
                 ? 0
-                : currentValue.poiEventLengths.Unshield)
+                : currentValue.poiEventLengths.Unshield +
+                  currentValue.poiEventLengths.Transact +
+                  currentValue.poiEventLengths.LegacyTransact +
+                  currentValue.poiEventLengths.Shield)
             );
           },
           0,
