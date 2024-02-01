@@ -64,78 +64,75 @@ export const DetailsBlock: React.FC<{
   status: POIStatus;
   txData: RailgunTransactionV2;
   isLast: boolean;
-  index: number
+  index: number;
 }> = ({ blindedCommitment, status, txData, isLast, index }) => {
   return (
     <div
-    key={blindedCommitment}
-    className={`pb-[16px] ${
-      isLast ? '' : 'border-b border-zinc-400 border-opacity-50'
-    }`}
-  >
-    <div className="flex flex-col">
-      <div className="flex flex-row">
-        <div className="text-base font-normal text-zinc-400 w-[180px]">
-          Unshield Index:
+      key={blindedCommitment}
+      className={`pb-[16px] ${
+        isLast ? '' : 'border-b border-zinc-400 border-opacity-50'
+      }`}
+    >
+      <div className="flex flex-col">
+        <div className="flex flex-row">
+          <div className="text-base font-normal text-zinc-400 w-[180px]">
+            Unshield Index:
+          </div>
+          <div
+            className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
+          >
+            <div>{index + 1}</div>
+          </div>
         </div>
-        <div
-          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
-        >
-          <div>{index + 1}</div>
-        </div>
-      </div>
 
-      <div className="flex flex-row">
-        <div className="text-base font-normal text-zinc-400 w-[180px]">
-          Token Address:
+        <div className="flex flex-row">
+          <div className="text-base font-normal text-zinc-400 w-[180px]">
+            Token Address:
+          </div>
+          <div
+            className={`flex flex-row space-x-1.5 items-center text-base font-normal flex-1 truncate`}
+          >
+            <div>{txData.unshield?.tokenData.tokenAddress}</div>
+          </div>
         </div>
-        <div
-          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
-        >
-          <div>{txData.unshield?.tokenData.tokenAddress}</div>
-        </div>
-      </div>
 
-      <div className="flex flex-row">
-        <div className="text-base font-normal text-zinc-400 w-[180px]">
-          Amount:
+        <div className="flex flex-row">
+          <div className="text-base font-normal text-zinc-400 w-[180px]">
+            Amount:
+          </div>
+          <div
+            className={`flex flex-row space-x-1.5 items-center text-base font-normal flex-1 truncate`}
+          >
+            <div>{txData.unshield?.value}</div>
+          </div>
         </div>
-        <div
-          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
-        >
-          <div>{txData.unshield?.value}</div>
-        </div>
-      </div>
 
-
-      <div className="flex flex-row">
-        <div className="text-base font-normal text-zinc-400 w-[180px]">
-          Status:
-        </div>
-        <div
-          className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
-        >
-          <div>{status}</div>
-          <div>
-            {status === POIStatus.Valid ? (
-              <ValidSVG />
-            ) : (
-              <MissingSVG />
-            )}
+        <div className="flex flex-row">
+          <div className="text-base font-normal text-zinc-400 w-[180px]">
+            Status:
+          </div>
+          <div
+            className={`flex flex-row space-x-1.5 items-center text-base font-normal`}
+          >
+            <div>{status}</div>
+            <div>
+              {status === POIStatus.Valid ? <ValidSVG /> : <MissingSVG />}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   );
 };
-
 
 export const ListBlock: React.FC<{
   listKey: string;
   poisPerBlindedCommitment: NewPOIsPerBlindedCommitment[];
   isLast: boolean;
-  txDataMapping: { railgunTransaction: RailgunTransactionV2; railgunTxid: string; }[];
+  txDataMapping: {
+    railgunTransaction: RailgunTransactionV2;
+    railgunTxid: string;
+  }[];
 }> = ({ listKey, poisPerBlindedCommitment, isLast, txDataMapping }) => {
   let [isExpanded, setIsExpanded] = React.useState(false);
   let overallStatus = // if there is any missing POI, the overall status is missing
@@ -147,16 +144,20 @@ export const ListBlock: React.FC<{
 
   console.log(JSON.stringify(txDataMapping));
   const newTxDataMapping = new Map<string, RailgunTransactionV2>(
-    txDataMapping.map(txData => [txData.railgunTxid, txData.railgunTransaction])
+    txDataMapping.map(txData => [
+      txData.railgunTxid,
+      txData.railgunTransaction,
+    ]),
   );
   return (
     <div
       key={listKey}
       className={`pb-[16px] ${
-        (isLast && !isExpanded ) ? '' : 'border-b border-zinc-400 border-opacity-50'
+        isLast && !isExpanded
+          ? ''
+          : 'border-b border-zinc-400 border-opacity-50'
       }`}
     >
-      
       <div className="flex flex-row">
         <div className="text-base font-normal text-zinc-400 w-[180px]">
           List Name:
@@ -173,12 +174,11 @@ export const ListBlock: React.FC<{
           </div>
         </div>
       </div>
-
       <div className="flex flex-row">
         <div className="text-base font-normal text-zinc-400 w-[180px]">
           List Key:
         </div>
-        <div className="text-base font-normal truncate">{listKey}</div>
+        <div className="text-base font-normal flex-1 truncate">{listKey}</div>
       </div>
 
       <div className="flex flex-row">
@@ -224,15 +224,25 @@ export const ListBlock: React.FC<{
           </div>
         </div>
       </div>
-      {isExpanded && <div className="flex flex-row border-b border-zinc-400 border-opacity-50 mx-[200px] mt-[15px]"></div>}
+      {isExpanded && (
+        <div className="flex flex-row border-b border-zinc-400 border-opacity-50 mx-[200px] mt-[15px]"></div>
+      )}
 
       {isExpanded && (
         <div className="flex flex-col space-y-[16px] pt-[20px]">
-          {poisPerBlindedCommitment.map(
-            (item, index) => (
-              <DetailsBlock blindedCommitment={item.blindedCommitment} status={item.poiStatus} txData={newTxDataMapping.get(item.blindedCommitment.slice(2)) ?? {} as RailgunTransactionV2} isLast={index === poisPerBlindedCommitment.length - 1} index={index} />
-            ),
-          )}
+          {poisPerBlindedCommitment.map((item, index) => (
+            <DetailsBlock
+              key={item.blindedCommitment}
+              blindedCommitment={item.blindedCommitment}
+              status={item.poiStatus}
+              txData={
+                newTxDataMapping.get(item.blindedCommitment.slice(2)) ??
+                ({} as RailgunTransactionV2)
+              }
+              isLast={index === poisPerBlindedCommitment.length - 1}
+              index={index}
+            />
+          ))}
         </div>
       )}
 
@@ -291,17 +301,19 @@ export const ListBlock: React.FC<{
 export const TxBlock: React.FC<{
   txid: string;
   poisPerList: NewPOIsPerList;
-  txDataMapping: { railgunTransaction: RailgunTransactionV2; railgunTxid: string; }[];
+  txDataMapping: {
+    railgunTransaction: RailgunTransactionV2;
+    railgunTxid: string;
+  }[];
 }> = ({ txid, poisPerList, txDataMapping }) => {
-  console.log(JSON.stringify(txDataMapping));
   return (
     <div className="text-clip w-full h-auto mb-4 bg-white rounded-lg shadow">
-      <div className="text-clip flex flex-row p-4 border-b border-zinc-400 border-opacity-50 px-[50px] py-[25px]">
+      <div className="text-clip flex flex-col md:flex-row p-4 border-b border-zinc-400 border-opacity-50 px-[20px] md:px-[50px] py-[25px]">
         <div className="text-lg font-semibold mr-2 truncate">Txn Hash: </div>
         <div className="text-lg font-normal truncate">{txid}</div>
       </div>
 
-      <div className="flex flex-col space-y-[40px] mx-[50px] pt-[40px]">
+      <div className="flex flex-col space-y-[40px] mx-[20px] md:mx-[50px] pt-[40px]">
         {Object.entries(poisPerList)
           .filter(([listKey, _]) => !IGNORED_LISTS.includes(listKey))
           .map(([listKey, status], index, filteredList) => (
@@ -317,7 +329,6 @@ export const TxBlock: React.FC<{
     </div>
   );
 };
-
 export const ResultList: React.FC<ResultListProps> = ({ results }) => {
   return (
     <div className="w-full flex flex-col items-center space-y-[50px] pt-[50px]">
