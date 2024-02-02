@@ -7,6 +7,7 @@ import {
   NewPOIsPerList,
   RailgunTransactionV2,
 } from '@screens/App';
+import { getTokenAmountString } from '@utils/TokenDecimals';
 
 interface ResultListProps {
   results: AllResults;
@@ -103,7 +104,7 @@ export const DetailsBlock: React.FC<{
           <div
             className={`flex flex-row space-x-1.5 items-center text-base font-normal flex-1 truncate`}
           >
-            <div>{txData.unshield?.value}</div>
+            <div>{txData.unshield?.value !== undefined && getTokenAmountString(txData.unshield?.value, txData.unshield?.tokenData.tokenAddress)}</div>
           </div>
         </div>
 
